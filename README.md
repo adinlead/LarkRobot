@@ -50,7 +50,7 @@ rsync -av -e ssh \
   --exclude='update2server.sh' \
   --exclude='*.log' \
   --exclude='be.*' \
-  ./ ubuntu@18.163.77.194:~/fsbot/
+  ./ ubuntu@1.2.3.4:~/fsbot/
 ```
 **插件示例与说明**
 
