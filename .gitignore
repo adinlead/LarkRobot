@@ -130,5 +130,8 @@ dmypy.json
 # IDEA
 .idea/
 
-#
+# desensitization
 VpnReport.py
+update2server.sh
+.env
+conf/db.json
