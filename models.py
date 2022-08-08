@@ -14,8 +14,11 @@ _SELF_OPEN_ID = os.getenv("SELF_OPEN_ID")
 
 
 class UserInfo(object):
+    """
+    用户信息
+    """
+
     def __init__(self, open_id, union_id, username, description):
-        super().__init__()
         self.open_id = open_id
         self.union_id = union_id
         self.username = username
@@ -54,6 +57,9 @@ class UserInfo(object):
 
 
 class Event(object):
+    """
+    飞书事件
+    """
     callback_handler = None
 
     # event base
@@ -125,7 +131,10 @@ class ReceiveMessage(object):
         return False
 
 
-class WebRequest(object):
+class ApiRequest(object):
+    """
+    API请求
+    """
     def __init__(self, req: request):
         self.data: bytes = req.data
         self.path: str = req.path

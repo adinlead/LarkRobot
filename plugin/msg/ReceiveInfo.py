@@ -4,7 +4,6 @@ from models import ReceiveMessage, UserInfo
 
 PLUGIN_INFO = PluginInfo(plugin_name="ReceiveInfo",
                          plugin_event=LarkEvent.IM_MESSAGE_RECEIVE,
-                         plugin_filter={},
                          weight=1000)
 
 

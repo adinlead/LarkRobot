@@ -1,4 +1,3 @@
-#!/usr/bin/env python3.8
 import functools
 import json
 import utils
@@ -10,8 +9,8 @@ from dotenv import find_dotenv, load_dotenv
 from flask import request
 
 from api import MessageApiClient
-from enums import LarkEvent, PluginFunction
-from models import Event, ReceiveMessage, WebRequest
+from enums import LarkEvent, PluginType
+from models import Event, ReceiveMessage, ApiRequest
 
 load_dotenv(find_dotenv())
 
@@ -19,23 +18,37 @@ logger = utils.get_logger()
 
 
 class PluginInfo(object):
+    """
+    插件信息体
+    """
     members = []
 
     def __init__(self,
                  plugin_name: str,
+                 plugin_type: PluginType = PluginType.EVENT,
                  plugin_event: LarkEvent = None,
-                 plugin_filter: dict = None,
                  api_path: str = None,
-                 function: PluginFunction = PluginFunction.EVENT,
                  weight=0):
+        """
+        初始化插件信息
+        :param plugin_name: 插件名称，建议控制在18个字符以内
+        :param plugin_type: 插件类型，详见 PluginType
+        :param plugin_event: 注册事件
+        :param api_path: API路径，建议控制在30个字符以内
+        :param weight: 插件权重，仅针对事件型插件，权重越大越先调用
+        """
         self.name = plugin_name
         self.event_type = plugin_event
-        self.filter = plugin_filter
-        self.function = function
+        self.type = plugin_type
         self.weight = weight
         self.api_path = api_path
 
     def set_members(self, members):
+        """
+        设置成员方法与变量等信息(dir)
+        :param members:
+        :return:
+        """
         self.members = members
 
 
@@ -74,10 +87,22 @@ class ConfigManger(object):
 
 
 class PluginManagerTools(object):
-    def __init__(self, api_client: MessageApiClient, config_manger: ConfigManger):
+    """
+    插件工具
+    此工具会在掉用插件时传入
+    工具性插件可以在初始化时将自身实例化后加入该类中已供别的插件使用
+    """
+
+    def __init__(self, api_client: MessageApiClient, config_manger: ConfigManger, __logger=utils.get_logger()):
+        """
+        初始化插件工具
+        :param api_client:      飞书API
+        :param config_manger:   配置管理器
+        :param __logger:        日志工具
+        """
         self.api_client: MessageApiClient = api_client
         self.config_manger: ConfigManger = config_manger
-        self.logger = utils.get_logger()
+        self.logger = __logger
 
     def ok(self):
         pass
@@ -88,17 +113,23 @@ class PluginManager(object):
     插件管理器
     """
     EVENT_PLUGIN_DICT = dict()
-    WEB_PLUGIN_DICT = dict()
+    API_PLUGIN_DICT = dict()
     PLUGIN_UPDATE_AT = 0
 
     def __init__(self, api_client: MessageApiClient, config_manger: ConfigManger):
+        """
+        初始化插件管理器
+        :param api_client: 飞书API
+        :param config_manger: 配置管理器
+        """
         self.tools = PluginManagerTools(api_client, config_manger)
-        self._update_plugin_dict()
+        self._scanning_plugin()
 
-    def test_model(self, mod):
-        pass
-
-    def _update_plugin_dict(self):
+    def _scanning_plugin(self):
+        """
+        扫描并注册插件
+        :return:
+        """
         now = int(time.time())
         if now - self.PLUGIN_UPDATE_AT > 60:
             for item in LarkEvent:
@@ -106,7 +137,6 @@ class PluginManager(object):
 
             import pkgutil
             # 1. 先扫描MOD，进行排序
-            # 2. 将MOD进行初始化并归类
             mod_info_list = []
             for finder, name, ispck in pkgutil.walk_packages(["./plugin"]):
                 loader = finder.find_module(name)  # 返回一个loader对象或者None。
@@ -124,10 +154,11 @@ class PluginManager(object):
                     return 1
                 return 1
 
+            # 2. 将MOD进行初始化并归类
             mod_info_list = sorted(mod_info_list, key=functools.cmp_to_key(mod_info_list_sort))
             for weight, mod, mod_members in mod_info_list:
                 plugin_info: PluginInfo = mod.PLUGIN_INFO
-                if plugin_info.function == PluginFunction.EVENT and "handler_event" in mod_members:
+                if plugin_info.type == PluginType.EVENT and "handler_event" in mod_members:
                     plugin_list: list = self.EVENT_PLUGIN_DICT.get(plugin_info.event_type.value)
                     if plugin_list is None:
                         logger.info("事件【%s】未被支持，事件处理插件【%s】已禁用" % (plugin_info.event_type.value, plugin_info.name))
@@ -145,10 +176,10 @@ class PluginManager(object):
                                 continue
                         plugin_list.append(mod)
                         logger.info("\t\t事件处理插件【%s】加载成功" % plugin_info.name)
-                    if plugin_info.api_path and "handler_web" in mod_members:
-                        self.WEB_PLUGIN_DICT[plugin_info.api_path] = mod
+                    if plugin_info.api_path and "handler_api" in mod_members:
+                        self.API_PLUGIN_DICT[plugin_info.api_path] = mod
                         logger.info("\t\t事件处理插件【%s】已绑定至WEB路径【%s】" % (plugin_info.name, plugin_info.api_path))
-                elif plugin_info.function == PluginFunction.UTILS:
+                elif plugin_info.type == PluginType.UTILS:
                     logger.info("发现工具性插件【%s】" % plugin_info.name)
                     if "init" in mod_members:
                         try:
@@ -160,7 +191,7 @@ class PluginManager(object):
                             traceback.print_exc()
                             continue
                     logger.info("\t\t工具性插件【%s】加载完成" % plugin_info.name)
-                elif plugin_info.function == PluginFunction.WEB and "handler_web" in mod_members:
+                elif plugin_info.type == PluginType.WEB and "handler_api" in mod_members:
                     logger.info("发现API插件【%s】" % plugin_info.name)
                     if "init" in mod_members:
                         try:
@@ -171,7 +202,7 @@ class PluginManager(object):
                             logger.info("\t\tAPI插件【%s】初始化失败，已被禁用" % plugin_info.name, e)
                             traceback.print_exc()
                             continue
-                    self.WEB_PLUGIN_DICT[plugin_info.api_path] = mod
+                    self.API_PLUGIN_DICT[plugin_info.api_path] = mod
                     logger.info("\t\tAPI插件【%s】已绑定至WEB路径【%s】" % (plugin_info.name, plugin_info.api_path))
 
             self.PLUGIN_UPDATE_AT = now
@@ -185,8 +216,8 @@ class PluginManager(object):
                     logger.info("\t\t| %s| %s|" % (str(mod_info.weight).ljust(7), mod_info.name.center(18)))
             logger.info("API插件：")
             logger.info("\t\t|           api path           |    plugin name    |")
-            for path in self.WEB_PLUGIN_DICT:
-                mod_info: PluginInfo = self.WEB_PLUGIN_DICT[path].PLUGIN_INFO
+            for path in self.API_PLUGIN_DICT:
+                mod_info: PluginInfo = self.API_PLUGIN_DICT[path].PLUGIN_INFO
                 logger.info("\t\t|%s| %s|" % (path.center(30), mod_info.name.center(18)))
 
     def with_event(self, event: Event):
@@ -203,16 +234,16 @@ class PluginManager(object):
                         logger.info("插件【%s】发生错误:" % mod.PLUGIN_INFO.name)
                         traceback.print_exc()
 
-    def with_web(self, web_request: WebRequest):
-        mod = self.WEB_PLUGIN_DICT[web_request.path]
+    def with_api(self, api_request: ApiRequest):
+        mod = self.API_PLUGIN_DICT[api_request.path]
         if mod:
             try:
-                mod.handler_web(web_request, self.tools)
+                mod.handler_api(api_request, self.tools)
             except BaseException as e:
                 logger.info("插件【%s】发生错误:" % mod.PLUGIN_INFO.name)
                 traceback.print_exc()
 
-    def config_path(self, req: request) -> WebRequest:
-        mod = self.WEB_PLUGIN_DICT[request.path]
+    def config_path(self, req: request) -> ApiRequest:
+        mod = self.API_PLUGIN_DICT[request.path]
         if mod:
-            return WebRequest(req)
+            return ApiRequest(req)

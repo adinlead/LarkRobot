@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.8
+#!/usr/bin/env python3.10
 import json
 import os
 import utils
@@ -20,7 +20,7 @@ load_dotenv(find_dotenv())
 
 app = Flask(__name__)
 
-# load from env
+# 加载环境参数
 APP_ID = os.getenv("APP_ID")
 APP_SECRET = os.getenv("APP_SECRET")
 VERIFICATION_TOKEN = os.getenv("VERIFICATION_TOKEN")
@@ -34,7 +34,7 @@ logger.info("VERIFICATION_TOKEN       >>>> %s", VERIFICATION_TOKEN)
 logger.info("ENCRYPT_KEY              >>>> %s", ENCRYPT_KEY)
 logger.info("LARK_HOST                >>>> %s", LARK_HOST)
 
-# init service
+# 初始化工具
 config_manger = ConfigManger()
 message_api_client = MessageApiClient(APP_ID, APP_SECRET, LARK_HOST)
 plugin_manager = PluginManager(message_api_client, config_manger)
@@ -67,7 +67,7 @@ def plugin_web_hook_handler(error):
     web_req = plugin_manager.config_path(request)
     if web_req:
         # 异步执行处理
-        executor.submit(plugin_manager.with_web, web_req)
+        executor.submit(plugin_manager.with_api, web_req)
         return jsonify({"code": 0, "msg": "success"})
     raise NotFound()
 
@@ -93,5 +93,4 @@ def callback_event_handler():
 
 
 if __name__ == "__main__":
-    # init()
     app.run(host="0.0.0.0", port=2020, debug=True)

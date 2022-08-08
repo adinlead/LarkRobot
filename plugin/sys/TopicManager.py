@@ -1,11 +1,11 @@
 import time
 
 import app
-from enums import ReceiveType, PluginFunction
+from enums import ReceiveType, PluginType
 from manager import PluginInfo, PluginManagerTools, ConfigManger
 from utils import singleton
 
-PLUGIN_INFO: PluginInfo = PluginInfo(plugin_name="Topic管理", weight=1000, function=PluginFunction.UTILS)
+PLUGIN_INFO: PluginInfo = PluginInfo(plugin_name="Topic管理", weight=1000, plugin_type=PluginType.UTILS)
 
 _TOPIC_MANAGER_KEY = "topic_data"
 

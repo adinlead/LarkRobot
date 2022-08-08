@@ -4,7 +4,6 @@ from models import ReceiveMessage
 
 PLUGIN_INFO: PluginInfo = PluginInfo(plugin_name="Command处理",
                                      plugin_event=LarkEvent.IM_MESSAGE_RECEIVE,
-                                     plugin_filter={},
                                      weight=0)
 
 

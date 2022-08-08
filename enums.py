@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class PluginFunction(Enum):
+class PluginType(Enum):
     EVENT = "event"
     UTILS = "utils"
     WEB = "web"
