@@ -26,7 +26,8 @@ root:
   - update2server.sh    此脚本用于将代码同步到服务器
   - .env                环境参数文件，存放飞书或者其他组件模块的环境参数
 ```
-**注意！.env与update2server.sh这两个文件因为要脱敏所以已经删除！源文件内容如下：**
+**注意！.env与update2server.sh这两个文件因为要脱敏所以已经删除！源文件内容如下：**  
+
 .env
 ```properties
 APP_ID=cli_xxxxxxxxxxxxxxxx
@@ -38,7 +39,8 @@ LARK_HOST=https://open.feishu.cn
 CONFIG_FILE_PATH=./conf/db.json
 # 机器人OPEN_ID
 SELF_OPEN_ID=ou_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
+```  
+
 update2server.sh
 ```shell
 rsync -av -e ssh \
