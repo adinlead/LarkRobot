@@ -1,6 +1,6 @@
 from enums import LarkEvent, PluginType
 from manager import PluginInfo, PluginManagerTools
-from models import ReceiveMessage, UserInfo, ApiRequest
+from models import ReceiveMessage, UserInfo, ApiRequest, RenderMessage
 
 PLUGIN_INFO = PluginInfo(
     # 插件名称，建议控制在18个字符以内
@@ -20,8 +20,22 @@ def init(tools: PluginManagerTools):
 
 
 def handler_event(receive_message: ReceiveMessage, tools: PluginManagerTools):
+    """
+    事件处理方法
+    :param receive_message: 入站信息
+    :param tools: 插件工具
+    :return:
+    """
+    if receive_message.is_text and "hello" in receive_message.text_content.lower() and receive_message.at_me():
+        tools.api_client.reply_message(receive_message.msg_id, RenderMessage.text("Hi!"))
     pass
 
 
 def handler_api(api_request: ApiRequest, tools: PluginManagerTools):
+    """
+    API处理方法
+    :param api_request: API请求
+    :param tools: 插件工具
+    :return:
+    """
     pass

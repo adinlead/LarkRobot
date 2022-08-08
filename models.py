@@ -106,7 +106,7 @@ class ReceiveMessage(object):
         try:
             text_content = json.loads(self.msg_content)
             if text_content.get("text"):
-                self.text_content = text_content.get("text")
+                self.text_content: str = text_content.get("text")
                 self.is_text = True
         except BaseException as e:
             pass
@@ -135,6 +135,7 @@ class ApiRequest(object):
     """
     API请求
     """
+
     def __init__(self, req: request):
         self.data: bytes = req.data
         self.path: str = req.path
@@ -165,7 +166,7 @@ class _RenderMessageType(Enum):
 
 class RenderMessage:
     """
-    消息体
+    响应消息体
     """
 
     def __init__(self, msg_type: _RenderMessageType, content="", receive_id=""):
@@ -179,10 +180,19 @@ class RenderMessage:
 
     @staticmethod
     def text(content: str):
+        """
+        创建普通文本消息
+        :param content:
+        :return:
+        """
         return RenderText(content)
 
     @staticmethod
     def post():
+        """
+        创建富文本消息
+        :return:
+        """
         return RenderPost()
 
     @abc.abstractmethod
@@ -194,6 +204,9 @@ class RenderMessage:
 
 
 class RenderText(RenderMessage):
+    """
+    普通文本消息
+    """
     def __init__(self, content, receive_id=""):
         super().__init__(_RenderMessageType.TEXT, receive_id=receive_id)
         self.content = content
@@ -221,6 +234,9 @@ class RenderText(RenderMessage):
 
 
 class RenderPost(RenderMessage):
+    """
+    富文本消息
+    """
     def __init__(self, receive_id=""):
         super().__init__(_RenderMessageType.POST, receive_id=receive_id)
         self.zh_cn = {
@@ -271,6 +287,11 @@ class RenderPost(RenderMessage):
 
     @staticmethod
     def create_text(text) -> dict:
+        """
+        创建文本节点
+        :param text:
+        :return:
+        """
         return {
             "tag": "text",
             "text": text
@@ -278,6 +299,12 @@ class RenderPost(RenderMessage):
 
     @staticmethod
     def create_link(link: str, text: str = None) -> dict:
+        """
+        创建链接节点
+        :param link:
+        :param text:
+        :return:
+        """
         return {
             "tag": "a",
             "href": link,
@@ -286,6 +313,12 @@ class RenderPost(RenderMessage):
 
     @staticmethod
     def at_user(user_id, user_name) -> dict:
+        """
+        创建@user节点
+        :param user_id:
+        :param user_name:
+        :return:
+        """
         return {
             "tag": "at",
             "user_id": user_id,
