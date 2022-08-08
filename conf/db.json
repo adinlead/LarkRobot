@@ -1,0 +1,17 @@
+{
+  "topic_data": {
+    "__init__": "2022-08-05 14:28:15",
+    "demo_topic": [
+      {
+        "id": "oc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "name": null,
+        "type": "group"
+      },
+      {
+        "id": "oc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "name": null,
+        "type": "user"
+      }
+    ]
+  }
+}
